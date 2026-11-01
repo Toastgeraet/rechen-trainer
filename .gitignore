@@ -1,0 +1,9 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+
+# Exported builds
+/build/
+
+# Generated from i18n/strings.csv on import
+i18n/*.translation

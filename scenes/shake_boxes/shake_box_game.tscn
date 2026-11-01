@@ -1,0 +1,127 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/shake_boxes/shake_box_game.gd" id="1_game"]
+[ext_resource type="Script" path="res://scenes/shake_boxes/shake_box.gd" id="2_box"]
+
+[node name="ShakeBoxGame" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_game")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.94, 0.9, 0.83, 1)
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 48
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 48
+
+[node name="Column" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="TopBar" type="HBoxContainer" parent="Margin/Column"]
+layout_mode = 2
+
+[node name="BackButton" type="Button" parent="Margin/Column/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "BACK"
+
+[node name="Spacer" type="Control" parent="Margin/Column/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ScoreLabel" type="Label" parent="Margin/Column/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "SCORE"
+vertical_alignment = 1
+
+[node name="PromptLabel" type="Label" parent="Margin/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+theme_override_font_sizes/font_size = 44
+text = "SHAKE_PROMPT"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="BoxArea" type="TextureRect" parent="Margin/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 460)
+layout_mode = 2
+size_flags_vertical = 3
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Controls" type="VBoxContainer" parent="Margin/Column"]
+custom_minimum_size = Vector2(0, 400)
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="ShakeButton" type="Button" parent="Margin/Column/Controls"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(380, 110)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 44
+text = "SHAKE_BUTTON"
+
+[node name="AnswerPad" type="GridContainer" parent="Margin/Column/Controls"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 12
+columns = 6
+
+[node name="FeedbackLabel" type="Label" parent="Margin/Column/Controls"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="NextButton" type="Button" parent="Margin/Column/Controls"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(380, 110)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 44
+text = "NEXT"
+
+[node name="BoxViewport" type="SubViewport" parent="."]
+unique_name_in_owner = true
+transparent_bg = true
+size = Vector2i(1400, 1040)
+render_target_update_mode = 4
+
+[node name="ShakeBox" type="Node2D" parent="BoxViewport"]
+unique_name_in_owner = true
+script = ExtResource("2_box")
+
+[connection signal="pressed" from="Margin/Column/TopBar/BackButton" to="." method="_on_back_button_pressed"]
+[connection signal="pressed" from="Margin/Column/Controls/ShakeButton" to="." method="_on_shake_button_pressed"]
+[connection signal="pressed" from="Margin/Column/Controls/NextButton" to="." method="_on_next_button_pressed"]

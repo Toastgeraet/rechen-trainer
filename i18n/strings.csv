@@ -1,0 +1,18 @@
+keys,de
+APP_TITLE,Rechen-Trainer
+TILE_SHAKE_BOXES,Schüttel-Boxen
+RANGE_TITLE,Welcher Zahlenraum?
+RANGE_UP_TO_10,bis 10
+RANGE_UP_TO_20,bis 20
+RANGE_10_TO_20,10 bis 20
+BACK,Zurück
+SHAKE_PROMPT,Schüttle das Handy!
+SHAKE_BUTTON,Schütteln
+SHAKING,Klapper klapper …
+SHAKE_AGAIN,Keine Kugel ist herausgefallen. Schüttle nochmal!
+QUESTION_HIDDEN,Wie viele Kugeln sind versteckt?
+CORRECT,Richtig!
+WRONG_TRY_AGAIN,Nicht ganz. Versuch es nochmal!
+SOLUTION,"Schau mal: {hidden} Kugeln waren versteckt."
+NEXT,Weiter
+SCORE,"{correct} von {total} richtig"
