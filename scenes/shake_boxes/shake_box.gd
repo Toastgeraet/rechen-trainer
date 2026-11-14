@@ -2,13 +2,14 @@ class_name ShakeBox
 extends Node2D
 
 ## A box with two compartments separated by a low wedge. The left side is open
-## to view; the right side sits under a lid. Shaking throws the marbles around,
-## some hop over the wedge, and once everything is still `settled` reports how
-## many are visible.
+## to view; the right side sits under a lid. Shaking throws the marbles around
+## and some hop over the wedge. As soon as no marble can reach the tip of the
+## wedge any more, `sides_decided` reports how many are visible, and a gate
+## above the wedge closes so the count can't change while they finish rolling.
 ##
 ## Coordinates are local, with the origin at the centre of the inner space.
 
-signal settled(visible_count: int)
+signal sides_decided(visible_count: int)
 
 const INNER_SIZE := Vector2(640, 380)
 const WALL := 80.0
@@ -27,12 +28,14 @@ const SHAKE_SCATTER := 200.0
 const SHAKE_LIFT_MIN := 400.0
 const SHAKE_LIFT_MAX := 850.0
 
-## Speed under which a marble counts as resting, in px/s.
-const REST_SPEED := 15.0
-## How long everything must rest before the box counts as settled.
-const REST_TIME := 0.5
-## Give up waiting and count anyway; marbles may jitter forever on some devices.
-const SETTLE_TIMEOUT := 4.5
+## A marble is out of reach of the tip once its centre, even flying straight up
+## with its current speed, stays this far below the tip.
+const DECIDE_MARGIN := 4.0
+## Don't judge before this. Impulses reach `linear_velocity` only after the next
+## physics step, so right after a shake every marble still looks at rest.
+const DECIDE_MIN_TIME := 0.2
+## Count anyway after this long; only a marble balancing on the tip stalls it.
+const DECIDE_TIMEOUT := 6.0
 
 const PAPER := Color(0.95, 0.97, 0.81)
 const FRAME := Color(0.17, 0.66, 0.66)
@@ -42,12 +45,14 @@ const TAB_FILL := Color(0.89, 0.96, 0.95)
 const TEXT := Color(0.12, 0.31, 0.36)
 
 var total: int = 0
+## True from a shake until the sides are decided.
 var is_moving: bool = false
 
 var _marbles: Array[Marble] = []
 var _marble_radius: float = 20.0
-var _rest_timer: float = 0.0
 var _move_timer: float = 0.0
+var _gravity: float = 980.0
+var _gate: CollisionShape2D
 var _rng := RandomNumberGenerator.new()
 var _lid: Node2D
 var _frame: Node2D
@@ -56,6 +61,7 @@ var _marble_layer: Node2D
 
 func _ready() -> void:
 	_rng.randomize()
+	_gravity = ProjectSettings.get_setting("physics/2d/default_gravity", 980.0)
 	_build_walls()
 	_marble_layer = Node2D.new()
 	_marble_layer.name = "Marbles"
@@ -78,6 +84,7 @@ func fill(count: int, marble_radius: float) -> void:
 	_marble_radius = marble_radius
 	_lid.modulate.a = 1.0
 	_frame.queue_redraw()
+	_set_gate_closed(false)
 
 	var spacing := marble_radius * 2.0 + 2.0
 	var left := DIVIDER_HALF_WIDTH + marble_radius + 4.0
@@ -114,8 +121,8 @@ func shake(direction: Vector2 = Vector2.ZERO, strength: float = 1.0) -> void:
 			-_rng.randf_range(SHAKE_LIFT_MIN, SHAKE_LIFT_MAX))
 		marble.sleeping = false
 		marble.apply_central_impulse(impulse * strength * marble.mass)
+	_set_gate_closed(false)
 	is_moving = true
-	_rest_timer = 0.0
 	_move_timer = 0.0
 
 
@@ -137,15 +144,29 @@ func _physics_process(delta: float) -> void:
 		return
 	_move_timer += delta
 	_nudge_marbles_on_divider()
-	var resting := true
-	for marble in _marbles:
-		if marble.linear_velocity.length() > REST_SPEED:
-			resting = false
-			break
-	_rest_timer = _rest_timer + delta if resting else 0.0
-	if _rest_timer >= REST_TIME or _move_timer >= SETTLE_TIMEOUT:
+	if _move_timer < DECIDE_MIN_TIME:
+		return
+	if _all_out_of_reach() or _move_timer >= DECIDE_TIMEOUT:
 		is_moving = false
-		settled.emit(visible_count())
+		_set_gate_closed(true)
+		sides_decided.emit(visible_count())
+
+
+## True when no marble can get its centre up to the tip of the wedge, which it
+## would have to do to cross. Uses each marble's own speed only; a collision
+## could still lift one, which is why the gate closes once this holds.
+func _all_out_of_reach() -> bool:
+	var tip_y := INNER_SIZE.y / 2.0 - DIVIDER_HEIGHT
+	for marble in _marbles:
+		var speed := marble.linear_velocity.length()
+		var highest_y := marble.position.y - speed * speed / (2.0 * _gravity)
+		if highest_y < tip_y + DECIDE_MARGIN:
+			return false
+	return true
+
+
+func _set_gate_closed(closed: bool) -> void:
+	_gate.set_deferred(&"disabled", not closed)
 
 
 ## A marble balanced on the tip of the wedge belongs to neither side.
@@ -179,6 +200,18 @@ func _build_walls() -> void:
 	var divider := CollisionPolygon2D.new()
 	divider.polygon = _divider_points()
 	body.add_child(divider)
+
+	# An invisible wall from the tip of the wedge to the ceiling, closed once
+	# the sides are decided. A segment, so it can't overlap a marble resting
+	# against the wedge when it appears.
+	var gate_shape := SegmentShape2D.new()
+	gate_shape.a = Vector2(0, -half.y)
+	gate_shape.b = Vector2(0, half.y - DIVIDER_HEIGHT - 1.0)
+	_gate = CollisionShape2D.new()
+	_gate.name = "Gate"
+	_gate.shape = gate_shape
+	_gate.disabled = true
+	body.add_child(_gate)
 
 
 func _add_rect(body: StaticBody2D, center: Vector2, size: Vector2) -> void:

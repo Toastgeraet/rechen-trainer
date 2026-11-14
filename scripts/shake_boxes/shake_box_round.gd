@@ -31,12 +31,11 @@ func _init(range_: NumberRange, seed_value: int = -1) -> void:
 		_rng.seed = seed_value
 
 
-## Picks the next box size. Never repeats the previous size, so consecutive
-## boxes always look different.
+## Picks the next box size. Unless the range is a single number, never
+## repeats the previous size, so consecutive boxes look different.
 func next_box() -> int:
-	var previous := total
-	var candidate := previous
-	while candidate == previous:
+	var candidate := _rng.randi_range(number_range.minimum, number_range.maximum)
+	while candidate == total and not number_range.is_fixed():
 		candidate = _rng.randi_range(number_range.minimum, number_range.maximum)
 	total = candidate
 	visible_count = 0

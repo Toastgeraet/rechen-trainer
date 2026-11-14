@@ -3,8 +3,13 @@ APP_TITLE,Rechen-Trainer
 TILE_SHAKE_BOXES,Schüttel-Boxen
 RANGE_TITLE,Welcher Zahlenraum?
 RANGE_UP_TO_10,bis 10
-RANGE_UP_TO_20,bis 20
-RANGE_10_TO_20,10 bis 20
+RANGE_CUSTOM,Eigene …
+CUSTOM_TITLE,Eigene Zahlen
+CUSTOM_FIXED,Feste Zahl
+CUSTOM_RANGE,Zahlenbereich
+RANGE_FROM,von
+RANGE_TO,bis
+START,Los geht's!
 BACK,Zurück
 SHAKE_PROMPT,Schüttle das Handy!
 SHAKE_BUTTON,Schütteln
@@ -16,3 +21,5 @@ WRONG_TRY_AGAIN,Nicht ganz. Versuch es nochmal!
 SOLUTION,"Schau mal: {hidden} Kugeln waren versteckt."
 NEXT,Weiter
 SCORE,"{correct} von {total} richtig"
+SPEED_NORMAL,Normales Tempo
+SPEED_FAST,Doppeltes Tempo

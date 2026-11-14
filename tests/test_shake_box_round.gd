@@ -7,40 +7,57 @@ func run(t: TestCase) -> void:
 	_test_ranges(t)
 	_test_box_sizes_stay_in_range(t)
 	_test_box_sizes_never_repeat(t)
+	_test_fixed_number_repeats(t)
 	_test_correct_answer(t)
 	_test_wrong_then_reveal(t)
 	_test_must_shake_out_a_marble(t)
 
 
 func _test_ranges(t: TestCase) -> void:
-	t.test("number ranges")
-	var up_to_10 := NumberRange.from_id(NumberRange.UP_TO_10)
+	t.test("quick choice is 2 to 10")
+	var up_to_10 := NumberRange.up_to_10()
 	t.eq(up_to_10.minimum, 2)
 	t.eq(up_to_10.maximum, 10)
-	var up_to_20 := NumberRange.from_id(NumberRange.UP_TO_20)
-	t.eq(up_to_20.maximum, 20)
-	var teens := NumberRange.from_id(NumberRange.FROM_10_TO_20)
-	t.eq(teens.minimum, 10)
-	t.eq(teens.maximum, 20)
-	t.eq(NumberRange.IDS.size(), 3)
+	t.not_ok(up_to_10.is_fixed())
+
+	t.test("a fixed number is a one-value range")
+	var seven := NumberRange.fixed(7)
+	t.eq(seven.minimum, 7)
+	t.eq(seven.maximum, 7)
+	t.ok(seven.is_fixed())
+
+	t.test("custom ranges are ordered and clamped to what fits in the box")
+	var swapped := NumberRange.new(15, 12)
+	t.eq(swapped.minimum, 12)
+	t.eq(swapped.maximum, 15)
+	var wide := NumberRange.new(0, 99)
+	t.eq(wide.minimum, NumberRange.MIN_MARBLES)
+	t.eq(wide.maximum, NumberRange.MAX_MARBLES)
 
 
 func _test_box_sizes_stay_in_range(t: TestCase) -> void:
-	for range_id in NumberRange.IDS:
-		t.test("box sizes cover %s and stay inside it" % range_id)
-		var round_ := ShakeBoxRound.new(NumberRange.from_id(range_id), 7)
+	for range_ in [NumberRange.up_to_10(), NumberRange.new(10, 20), NumberRange.new(2, 20)]:
+		t.test("box sizes cover %d..%d and stay inside it" % [range_.minimum, range_.maximum])
+		var round_ := ShakeBoxRound.new(range_, 7)
 		var seen := {}
 		for i in 500:
 			var total := round_.next_box()
 			seen[total] = true
-			t.ok(round_.number_range.contains(total), "box of %d" % total)
-		var span := round_.number_range.maximum - round_.number_range.minimum + 1
-		t.eq(seen.size(), span, "every size shows up")
+			t.ok(range_.contains(total), "box of %d" % total)
+		t.eq(seen.size(), range_.maximum - range_.minimum + 1, "every size shows up")
+
+
+func _test_fixed_number_repeats(t: TestCase) -> void:
+	# Regression: next_box() refused to repeat a size and spun forever.
+	t.test("a fixed number gives that box every time")
+	var round_ := ShakeBoxRound.new(NumberRange.fixed(5), 1)
+	for i in 20:
+		t.eq(round_.next_box(), 5)
 
 
 func _test_box_sizes_never_repeat(t: TestCase) -> void:
 	t.test("two boxes in a row differ")
-	var round_ := ShakeBoxRound.new(NumberRange.from_id(NumberRange.UP_TO_10), 3)
+	var round_ := ShakeBoxRound.new(NumberRange.up_to_10(), 3)
 	var previous := round_.next_box()
 	var repeats := 0
 	for i in 200:
@@ -50,10 +67,15 @@ func _test_box_sizes_never_repeat(t: TestCase) -> void:
 		previous = total
 	t.eq(repeats, 0)
 
+	t.test("a two-value range alternates")
+	var pair := ShakeBoxRound.new(NumberRange.new(4, 5), 3)
+	var first := pair.next_box()
+	t.ne(pair.next_box(), first)
+
 
 func _test_correct_answer(t: TestCase) -> void:
 	t.test("right answer on first try scores")
-	var round_ := ShakeBoxRound.new(NumberRange.from_id(NumberRange.UP_TO_10), 1)
+	var round_ := ShakeBoxRound.new(NumberRange.up_to_10(), 1)
 	var total := round_.next_box()
 	round_.set_visible_count(1)
 	t.eq(round_.hidden_count(), total - 1)
@@ -64,7 +86,7 @@ func _test_correct_answer(t: TestCase) -> void:
 
 func _test_wrong_then_reveal(t: TestCase) -> void:
 	t.test("wrong answers lead to the solution")
-	var round_ := ShakeBoxRound.new(NumberRange.from_id(NumberRange.UP_TO_10), 1)
+	var round_ := ShakeBoxRound.new(NumberRange.up_to_10(), 1)
 	var total := round_.next_box()
 	round_.set_visible_count(total)  # All out: 0 hidden.
 	t.eq(round_.answer(1), ShakeBoxRound.RESULT_WRONG)
@@ -83,7 +105,7 @@ func _test_wrong_then_reveal(t: TestCase) -> void:
 
 func _test_must_shake_out_a_marble(t: TestCase) -> void:
 	t.test("nothing to ask until a marble is visible")
-	var round_ := ShakeBoxRound.new(NumberRange.from_id(NumberRange.UP_TO_20), 1)
+	var round_ := ShakeBoxRound.new(NumberRange.new(2, 20), 1)
 	round_.next_box()
 	t.not_ok(round_.can_ask())
 	round_.set_visible_count(1)

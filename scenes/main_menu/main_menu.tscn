@@ -112,31 +112,121 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Panel" type="PanelContainer" parent="RangeOverlay/Center"]
-custom_minimum_size = Vector2(560, 0)
+custom_minimum_size = Vector2(600, 0)
 layout_mode = 2
 
-[node name="Column" type="VBoxContainer" parent="RangeOverlay/Center/Panel"]
+[node name="QuickPage" type="VBoxContainer" parent="RangeOverlay/Center/Panel"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 28
 
-[node name="RangeTitle" type="Label" parent="RangeOverlay/Center/Panel/Column"]
+[node name="QuickTitle" type="Label" parent="RangeOverlay/Center/Panel/QuickPage"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 44
 text = "RANGE_TITLE"
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="RangeButtons" type="VBoxContainer" parent="RangeOverlay/Center/Panel/Column"]
+[node name="UpTo10Button" type="Button" parent="RangeOverlay/Center/Panel/QuickPage"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+theme_override_font_sizes/font_size = 44
+text = "RANGE_UP_TO_10"
+
+[node name="CustomButton" type="Button" parent="RangeOverlay/Center/Panel/QuickPage"]
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+theme_override_font_sizes/font_size = 44
+text = "RANGE_CUSTOM"
+
+[node name="QuickBackButton" type="Button" parent="RangeOverlay/Center/Panel/QuickPage"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 32
+text = "BACK"
+
+[node name="CustomPage" type="VBoxContainer" parent="RangeOverlay/Center/Panel"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 28
+
+[node name="CustomTitle" type="Label" parent="RangeOverlay/Center/Panel/CustomPage"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 44
+text = "CUSTOM_TITLE"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="ModeRow" type="HBoxContainer" parent="RangeOverlay/Center/Panel/CustomPage"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="FixedModeButton" type="Button" parent="RangeOverlay/Center/Panel/CustomPage/ModeRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 32
+toggle_mode = true
+text = "CUSTOM_FIXED"
+
+[node name="RangeModeButton" type="Button" parent="RangeOverlay/Center/Panel/CustomPage/ModeRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 32
+toggle_mode = true
+text = "CUSTOM_RANGE"
+
+[node name="FixedRow" type="VBoxContainer" parent="RangeOverlay/Center/Panel/CustomPage"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/separation = 20
 
-[node name="CancelButton" type="Button" parent="RangeOverlay/Center/Panel/Column"]
+[node name="RangeRow" type="GridContainer" parent="RangeOverlay/Center/Panel/CustomPage"]
 unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/h_separation = 20
+theme_override_constants/v_separation = 20
+columns = 2
+
+[node name="FromLabel" type="Label" parent="RangeOverlay/Center/Panel/CustomPage/RangeRow"]
+layout_mode = 2
+text = "RANGE_FROM"
+vertical_alignment = 1
+
+[node name="FromSlot" type="VBoxContainer" parent="RangeOverlay/Center/Panel/CustomPage/RangeRow"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="ToLabel" type="Label" parent="RangeOverlay/Center/Panel/CustomPage/RangeRow"]
+layout_mode = 2
+text = "RANGE_TO"
+vertical_alignment = 1
+
+[node name="ToSlot" type="VBoxContainer" parent="RangeOverlay/Center/Panel/CustomPage/RangeRow"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="StartButton" type="Button" parent="RangeOverlay/Center/Panel/CustomPage"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+theme_override_font_sizes/font_size = 44
+text = "START"
+
+[node name="CustomBackButton" type="Button" parent="RangeOverlay/Center/Panel/CustomPage"]
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 32
 text = "BACK"
 
 [connection signal="pressed" from="Margin/Column/Tiles/ShakeBoxesTile" to="." method="_on_shake_boxes_tile_pressed"]
-[connection signal="pressed" from="RangeOverlay/Center/Panel/Column/CancelButton" to="." method="_on_cancel_button_pressed"]
+[connection signal="pressed" from="RangeOverlay/Center/Panel/QuickPage/UpTo10Button" to="." method="_on_up_to_10_button_pressed"]
+[connection signal="pressed" from="RangeOverlay/Center/Panel/QuickPage/CustomButton" to="." method="_on_custom_button_pressed"]
+[connection signal="pressed" from="RangeOverlay/Center/Panel/QuickPage/QuickBackButton" to="." method="_go_back"]
+[connection signal="pressed" from="RangeOverlay/Center/Panel/CustomPage/StartButton" to="." method="_on_start_button_pressed"]
+[connection signal="pressed" from="RangeOverlay/Center/Panel/CustomPage/CustomBackButton" to="." method="_go_back"]

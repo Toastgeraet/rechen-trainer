@@ -10,8 +10,12 @@ extends Control
 
 ## Linear acceleration (gravity removed) that counts as a shake, in m/s².
 const SHAKE_THRESHOLD := 9.0
-## Minimum time between two shake impulses while the phone keeps shaking.
-const SHAKE_COOLDOWN := 0.25
+## Minimum real time between two shake impulses while the phone keeps shaking,
+## in milliseconds. Real time, so fast mode doesn't double the impulses.
+const SHAKE_COOLDOWN_MS := 250
+## Fast mode runs the game clock this much faster.
+const FAST_TIME_SCALE := 2.0
+const NORMAL_PHYSICS_TICKS := 60
 ## Marbles shrink for bigger ranges so 20 fit on one side below the wedge.
 const MARBLE_RADIUS_SMALL_RANGE := 26.0
 const MARBLE_RADIUS_LARGE_RANGE := 17.0
@@ -20,11 +24,14 @@ const PAD_BUTTON_SIZE := Vector2(98, 90)
 const COLOR_CORRECT := Color(0.13, 0.55, 0.2)
 const COLOR_WRONG := Color(0.8, 0.35, 0.1)
 
+const ICON_NORMAL := preload("res://assets/icons/speed_normal.svg")
+const ICON_FAST := preload("res://assets/icons/speed_fast.svg")
+
 enum Phase { READY, MOVING, ASK, DONE }
 
 var _round: ShakeBoxRound
 var _phase: Phase = Phase.READY
-var _shake_cooldown: float = 0.0
+var _last_shake_msec: int = -SHAKE_COOLDOWN_MS
 ## Low-pass estimate of gravity, for devices without a gravity sensor.
 var _gravity_estimate := Vector3.ZERO
 
@@ -33,6 +40,7 @@ var _gravity_estimate := Vector3.ZERO
 @onready var _box_area: TextureRect = %BoxArea
 @onready var _prompt_label: Label = %PromptLabel
 @onready var _score_label: Label = %ScoreLabel
+@onready var _speed_button: Button = %SpeedButton
 @onready var _shake_button: Button = %ShakeButton
 @onready var _answer_pad: GridContainer = %AnswerPad
 @onready var _feedback_label: Label = %FeedbackLabel
@@ -41,14 +49,20 @@ var _gravity_estimate := Vector3.ZERO
 
 func _ready() -> void:
 	_round = ShakeBoxRound.new(Session.number_range)
-	_box.settled.connect(_on_box_settled)
+	_box.sides_decided.connect(_on_box_sides_decided)
 	_setup_box_viewport()
+	_apply_speed()
 	_start_box()
 
 
-func _process(delta: float) -> void:
-	_shake_cooldown = maxf(_shake_cooldown - delta, 0.0)
+func _process(_delta: float) -> void:
 	_read_accelerometer()
+
+
+func _exit_tree() -> void:
+	# Engine settings outlive the scene; leave the menu at normal speed.
+	Engine.time_scale = 1.0
+	Engine.physics_ticks_per_second = NORMAL_PHYSICS_TICKS
 
 
 func _notification(what: int) -> void:
@@ -91,9 +105,10 @@ func _can_shake() -> bool:
 
 
 func _shake(direction: Vector2, strength: float) -> void:
-	if not _can_shake() or _shake_cooldown > 0.0:
+	var now := Time.get_ticks_msec()
+	if not _can_shake() or now - _last_shake_msec < SHAKE_COOLDOWN_MS:
 		return
-	_shake_cooldown = SHAKE_COOLDOWN
+	_last_shake_msec = now
 	_box.shake(direction, strength)
 	_feedback_label.text = ""
 	if _phase != Phase.MOVING:
@@ -117,7 +132,7 @@ func _read_accelerometer() -> void:
 	_shake(direction, clampf(linear.length() / 15.0, 0.7, 1.3))
 
 
-func _on_box_settled(visible_count: int) -> void:
+func _on_box_sides_decided(visible_count: int) -> void:
 	_round.set_visible_count(visible_count)
 	if not _round.can_ask():
 		_enter_phase(Phase.READY, tr("SHAKE_AGAIN"))
@@ -178,6 +193,23 @@ func _setup_box_viewport() -> void:
 			Vector2(_box_viewport.size) / 2.0)
 	_box.position = Vector2(0, 30)  # The tab sticks out above, so sit a bit lower.
 	_box_area.texture = _box_viewport.get_texture()
+
+
+## Fast mode speeds up the whole game clock. The physics tick rate goes up by
+## the same factor, so each step still simulates 1/60 s and fast marbles don't
+## tunnel through walls.
+func _apply_speed() -> void:
+	var scale := FAST_TIME_SCALE if Session.fast_mode else 1.0
+	Engine.time_scale = scale
+	Engine.physics_ticks_per_second = int(NORMAL_PHYSICS_TICKS * scale)
+	_speed_button.icon = ICON_FAST if Session.fast_mode else ICON_NORMAL
+	_speed_button.tooltip_text = tr("SPEED_FAST") if Session.fast_mode else tr("SPEED_NORMAL")
+
+
+func _on_speed_button_pressed() -> void:
+	Session.fast_mode = not Session.fast_mode
+	Session.save_settings()
+	_apply_speed()
 
 
 func _on_shake_button_pressed() -> void:
