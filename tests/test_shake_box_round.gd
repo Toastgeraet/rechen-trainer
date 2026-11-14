@@ -14,9 +14,9 @@ func run(t: TestCase) -> void:
 
 
 func _test_ranges(t: TestCase) -> void:
-	t.test("quick choice is 2 to 10")
-	var up_to_10 := NumberRange.up_to_10()
-	t.eq(up_to_10.minimum, 2)
+	t.test("1 to 10 includes a single marble")
+	var up_to_10 := NumberRange.new(1, 10)
+	t.eq(up_to_10.minimum, 1)
 	t.eq(up_to_10.maximum, 10)
 	t.not_ok(up_to_10.is_fixed())
 
@@ -30,13 +30,19 @@ func _test_ranges(t: TestCase) -> void:
 	var swapped := NumberRange.new(15, 12)
 	t.eq(swapped.minimum, 12)
 	t.eq(swapped.maximum, 15)
+	t.test("menu labels")
+	TranslationServer.set_locale("de")
+	t.eq(NumberRange.fixed(10).label(), "Immer 10")
+	t.eq(NumberRange.new(1, 10).label(), "1 bis 10")
+
+	t.test("custom ranges are clamped to what fits in the box")
 	var wide := NumberRange.new(0, 99)
 	t.eq(wide.minimum, NumberRange.MIN_MARBLES)
 	t.eq(wide.maximum, NumberRange.MAX_MARBLES)
 
 
 func _test_box_sizes_stay_in_range(t: TestCase) -> void:
-	for range_ in [NumberRange.up_to_10(), NumberRange.new(10, 20), NumberRange.new(2, 20)]:
+	for range_ in [NumberRange.new(1, 10), NumberRange.new(10, 20), NumberRange.new(2, 20)]:
 		t.test("box sizes cover %d..%d and stay inside it" % [range_.minimum, range_.maximum])
 		var round_ := ShakeBoxRound.new(range_, 7)
 		var seen := {}
@@ -57,7 +63,7 @@ func _test_fixed_number_repeats(t: TestCase) -> void:
 
 func _test_box_sizes_never_repeat(t: TestCase) -> void:
 	t.test("two boxes in a row differ")
-	var round_ := ShakeBoxRound.new(NumberRange.up_to_10(), 3)
+	var round_ := ShakeBoxRound.new(NumberRange.new(1, 10), 3)
 	var previous := round_.next_box()
 	var repeats := 0
 	for i in 200:
@@ -75,7 +81,7 @@ func _test_box_sizes_never_repeat(t: TestCase) -> void:
 
 func _test_correct_answer(t: TestCase) -> void:
 	t.test("right answer on first try scores")
-	var round_ := ShakeBoxRound.new(NumberRange.up_to_10(), 1)
+	var round_ := ShakeBoxRound.new(NumberRange.new(1, 10), 1)
 	var total := round_.next_box()
 	round_.set_visible_count(1)
 	t.eq(round_.hidden_count(), total - 1)
@@ -86,7 +92,7 @@ func _test_correct_answer(t: TestCase) -> void:
 
 func _test_wrong_then_reveal(t: TestCase) -> void:
 	t.test("wrong answers lead to the solution")
-	var round_ := ShakeBoxRound.new(NumberRange.up_to_10(), 1)
+	var round_ := ShakeBoxRound.new(NumberRange.new(1, 10), 1)
 	var total := round_.next_box()
 	round_.set_visible_count(total)  # All out: 0 hidden.
 	t.eq(round_.answer(1), ShakeBoxRound.RESULT_WRONG)

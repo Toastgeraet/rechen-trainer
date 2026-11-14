@@ -13,7 +13,7 @@ const CUSTOM_FIXED := &"fixed"
 const CUSTOM_RANGE := &"range"
 
 ## Range for the next game, set by the menu, read by the shake-box game.
-var number_range: NumberRange = NumberRange.up_to_10()
+var number_range: NumberRange = NumberRange.fixed(10)
 
 ## Last "Eigene" choice in the menu, offered again next time.
 var custom_mode: StringName = CUSTOM_FIXED

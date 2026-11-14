@@ -2,8 +2,9 @@ keys,de
 APP_TITLE,Rechen-Trainer
 TILE_SHAKE_BOXES,Schüttel-Boxen
 RANGE_TITLE,Welcher Zahlenraum?
-RANGE_UP_TO_10,bis 10
-RANGE_CUSTOM,Eigene …
+RANGE_FIXED,Immer {n}
+RANGE_SPAN,{min} bis {max}
+CUSTOM_SETTINGS,Eigene Zahlen einstellen
 CUSTOM_TITLE,Eigene Zahlen
 CUSTOM_FIXED,Feste Zahl
 CUSTOM_RANGE,Zahlenbereich

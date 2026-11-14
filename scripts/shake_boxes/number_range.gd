@@ -4,8 +4,8 @@ extends RefCounted
 ## How many marbles a box may hold, inclusive on both ends. A fixed number is
 ## a range whose minimum equals its maximum.
 
-## A box with one marble has nothing to split.
-const MIN_MARBLES := 2
+## A single marble still splits: 1 + 0 or 0 + 1.
+const MIN_MARBLES := 1
 ## More don't fit on one side of the box below the wedge.
 const MAX_MARBLES := 20
 
@@ -18,11 +18,6 @@ func _init(lowest: int = MIN_MARBLES, highest: int = 10) -> void:
 	maximum = clampi(maxi(lowest, highest), MIN_MARBLES, MAX_MARBLES)
 
 
-## The quick-start choice in the menu ("bis 10").
-static func up_to_10() -> NumberRange:
-	return NumberRange.new(MIN_MARBLES, 10)
-
-
 static func fixed(value: int) -> NumberRange:
 	return NumberRange.new(value, value)
 
@@ -33,3 +28,10 @@ func is_fixed() -> bool:
 
 func contains(value: int) -> bool:
 	return value >= minimum and value <= maximum
+
+
+## Menu text: "Immer 7" for a fixed number, "4 bis 15" for a range.
+func label() -> String:
+	if is_fixed():
+		return TranslationServer.translate("RANGE_FIXED").format({"n": minimum})
+	return TranslationServer.translate("RANGE_SPAN").format({"min": minimum, "max": maximum})
